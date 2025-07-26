@@ -241,10 +241,19 @@ def save_return_data():
             data['date_of_filing'] = datetime.strptime(data['date_of_filing'], '%Y-%m-%d').date()
         
         # ✅ Validation: ARN required if status is Filed
-        if data.get('status') == 'Filed' and not data.get('arn'):
-            return jsonify({'success': False, 'error': 'ARN is required when status is "Filed".'})
-        if data.get('status') == 'Filed' and not data.get('date_of_filing'):
-            return jsonify({'success': False, 'error': 'Date of Filing is required when status is "Filed".'})
+        if data.get('status') == 'Filed':
+            missing_fields = []
+            if not data.get('arn'):
+                missing_fields.append('ARN')
+            if not data.get('date_of_filing'):
+                missing_fields.append('Date of Filing')
+
+            if missing_fields:
+                missing_str = ' and '.join(missing_fields)
+                return jsonify({
+                    'success': False, 
+                    'error': f'{missing_str} required.'
+                })
         
         success = gst_return_model.save_return_data(data)
         

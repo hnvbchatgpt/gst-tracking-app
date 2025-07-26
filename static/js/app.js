@@ -142,81 +142,6 @@ document.addEventListener('DOMContentLoaded', setGstReturnDropdownDefaults);
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
-/*
-document.addEventListener('DOMContentLoaded', function () {
-  const $modal = $('#returnDetailsModal');
-  const $statusSelect = $('#statusFilter');
-  const $clearBtn = $('#clearStatusFilter');
-
-  let select2Initialized = false;
-
-  // Initialize Select2 with checkbox-like icons (not actual input checkboxes)
-  function initStatusSelect() {
-    $statusSelect.select2({
-      placeholder: 'Select Status',
-      width: '100%',
-      closeOnSelect: false,
-      dropdownParent: $modal,
-      templateResult: function (option) {
-        if (!option.id) return option.text;
-        const selectedValues = $statusSelect.val() || [];
-        const isSelected = selectedValues.includes(option.id);
-        // Use Unicode checkbox glyphs or FontAwesome icons below:
-        return $(`
-          <div class="d-flex align-items-center">
-            <span>${option.text}</span>
-          </div>
-        `);
-      },
-      templateSelection: function (option) {
-        return option.text;
-      },
-      escapeMarkup: function (m) {
-        return m;
-      }
-    });
-  }
-
-  // Cleanup on modal close to fix scroll lock and stuck background issue
-  $modal.on('hidden.bs.modal', function () {
-    if ($statusSelect.hasClass('select2-hidden-accessible')) {
-      $statusSelect.select2('destroy');
-    }
-    select2Initialized = false;
-    // Remove all modal backdrops and modal-open class from body
-    $('.modal-backdrop').remove();
-    $('body').removeClass('modal-open').css('padding-right', '');
-
-    // Optional: Re-enable scroll on body forcibly
-    $('body').css('overflow', 'auto');
-  });
-
-  // Initialize Select2 once per modal open
-  $modal.on('shown.bs.modal', function () {
-    if (!select2Initialized) {
-      initStatusSelect();
-      // Pre-select all statuses except 'Filed'
-      const defaultStatuses = [
-        'Data Received',
-        'Saved',
-        'Payment Issued',
-        'Submitted'
-      ];
-      $statusSelect.val(defaultStatuses).trigger('change');
-      select2Initialized = true;
-    }
-  });
-
-  // Filter grid when selection changes
-  $statusSelect.on('change', filterGridByStatus);
-
-  // Clear filters
-  $clearBtn.on('click', function () {
-    $statusSelect.val(null).trigger('change');
-    filterGridByStatus();
-  });
-});
-*/
 
 document.addEventListener('DOMContentLoaded', function () {
   const $modal = $('#returnDetailsModal');
@@ -316,8 +241,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Clear button as before
   $clearBtn.on('click', function () {
-    $statusSelect.val(null).trigger('change');
-    filterGridByStatus();
+	  document.getElementById('searchInput').value = "";
+	  $statusSelect.val(null).trigger('change');
+	  filterGridByStatus();
   });
 });
 
@@ -439,12 +365,12 @@ function handleReturnDashboard(event) {
         if (data.success) {
             displayReturnDashboard(data.data, data.period);
         } else {
-            showAlert('Error loading dashboard: ' + data.error, 'danger');
+            showAlert(data.error, 'danger');
         }
     })
     .catch(error => {
         showLoading(false);
-        showAlert('Error: ' + error.message, 'danger');
+        showAlert(error.message, 'danger');
     });
 }
 
@@ -628,12 +554,12 @@ function showReturnDetails(returnType, period) {
 
 		  filterGridByStatus();
         } else {
-            showAlert('Error loading return details: ' + data.error, 'danger');
+            showAlert(data.error, 'danger');
         }
     })
     .catch(error => {
         showLoading(false);
-        showAlert('Error: ' + error.message, 'danger');
+        showAlert(error.message, 'danger');
     });
 }
 
@@ -652,14 +578,9 @@ function displayReturnDetails(returnType, period, clients) {
         row.innerHTML = `
             <td>${client.client_name}</td>
             <td>${client.gstin}</td>
-            <td>${client.period}</td>
+            <td>${client.period}</td>            
             <td>
-                <input type="date" class="form-control form-control-sm"
-                    value="${client.date_of_filing || ''}"
-                    onchange="updateReturnField(${client.client_code}, 'date_of_filing', this.value)">
-            </td>
-            <td>
-                <select class="form-select form-select-sm" name="status"
+                <select class="form-select form-select-sm status-input" name="status"
                     onchange="statusDropdownChanged(this, ${client.client_code})">
                     <option value="Data Received" ${client.status === 'Data Received' ? 'selected' : ''}>Data Received</option>
                     <option value="Saved" ${client.status === 'Saved' ? 'selected' : ''}>Saved</option>
@@ -668,8 +589,13 @@ function displayReturnDetails(returnType, period, clients) {
                     <option value="Filed" ${client.status === 'Filed' ? 'selected' : ''}>Filed</option>
                 </select>
             </td>
+			<td>
+                <input type="date" class="form-control form-control-sm date-of-filing-input"
+                    value="${client.date_of_filing || ''}"
+                    onchange="updateReturnField(${client.client_code}, 'date_of_filing', this.value)">
+            </td>
             <td>
-                <input type="text" class="form-control form-control-sm" name="arn"
+                <input type="text" class="form-control form-control-sm arn-input" name="arn"
                     value="${client.arn || ''}"
                     ${client.status !== 'Filed' ? 'disabled' : ''}
                     onchange="updateReturnField(${client.client_code}, 'arn', this.value)">
@@ -705,22 +631,21 @@ function exportReturnGridToExcel() {
         : returnClientsData.filter(client => statusFilter.includes(client.status));
 
     if (!filteredData.length) {
-        alert("No data available for export!");
+        showAlert("No data available for export!");
         return;
     }
 
     // Build a 2D array for Excel (headers + rows)
     const headers = [
-        "Client Name", "GSTIN", "Period", "Date of Filing",
-        "Status", "ARN", "Remarks"
+        "Client Name", "GSTIN", "Period", "Status", "Date of Filing", "ARN", "Remarks"
     ];
 
     const rows = filteredData.map(client => [
         client.client_name,
         client.gstin,
         client.period,
-        client.date_of_filing || "",
-        client.status,
+		client.status,
+        client.date_of_filing || "",        
         client.arn || "",
         client.remarks || ""
     ]);
@@ -733,94 +658,113 @@ function exportReturnGridToExcel() {
     XLSX.utils.book_append_sheet(wb, ws, "Returns");
 
     // Trigger download
-    XLSX.writeFile(wb, "ReturnDetails.xlsx");
+	var randomNum = Math.floor(1000 + Math.random() * 9000);
+	var fileName = "ReturnDetails_" + randomNum + ".xlsx";
+    XLSX.writeFile(wb, fileName);
 }
 
 
-// Status Filter Function
-const statusFilterId = 'statusFilter';
-const clearButtonId = 'clearStatusFilter';
+// // Status Filter Function
+// const statusFilterId = 'statusFilter';
+// const clearButtonId = 'clearStatusFilter';
 
-// 1️⃣ Filter logic
-function filterGridByStatus() {
-  const selectedStatuses = $('#statusFilter').val();  // returns array or null
+// // 1️⃣ Filter logic
+// function filterGridByStatus() {
+  // const selectedStatuses = $('#statusFilter').val();  // returns array or null
 
-  let filtered = (!selectedStatuses || selectedStatuses.length === 0)
-    ? returnClientsData
-    : returnClientsData.filter(client => selectedStatuses.includes(client.status));
+  // let filtered = (!selectedStatuses || selectedStatuses.length === 0)
+    // ? returnClientsData
+    // : returnClientsData.filter(client => selectedStatuses.includes(client.status));
 
-  displayReturnDetails(currentReturnType, currentPeriod, filtered);
-}
+  // displayReturnDetails(currentReturnType, currentPeriod, filtered);
+// }
 
-// 2️⃣ Clear Filters
-function clearStatusFilter() {
-    const statusSelect = document.getElementById(statusFilterId);
-    for (let option of statusSelect.options) {
-        option.selected = false;
-    }
-    filterGridByStatus();
-}
+// // 2️⃣ Clear Filters
+// function clearStatusFilter() {
+    // const statusSelect = document.getElementById(statusFilterId);
+    // for (let option of statusSelect.options) {
+        // option.selected = false;
+    // }
+    // filterGridByStatus();
+// }
 
-// 3️⃣ Pre-select defaults (everything except 'Filed')
-function preSelectNonFiledStatuses() {
-    const statusSelect = document.getElementById(statusFilterId);
-    for (let option of statusSelect.options) {
-        option.selected = option.value !== 'Filed';
-    }
-}
+// // 3️⃣ Pre-select defaults (everything except 'Filed')
+// function preSelectNonFiledStatuses() {
+    // const statusSelect = document.getElementById(statusFilterId);
+    // for (let option of statusSelect.options) {
+        // option.selected = option.value !== 'Filed';
+    // }
+// }
 
 function createReturnDetailsModal() {
     const modalHTML = `
-        <div class="modal fade" id="returnDetailsModal" tabindex="-1" aria-labelledby="returnDetailsModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-xl">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="returnDetailsModalLabel">Return Details</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <input type="text" id="searchInput" class="form-control" placeholder="Search clients...">
-                            </div>
-                            <div class="col-md-3">
-                                <select id="statusFilter" class="form-select">
-                                    <option value="">All Status</option>
-                                    <option value="Data Received">Data Received</option>
-                                    <option value="Saved">Saved</option>
-                                    <option value="Payment Issued">Payment Issued</option>
-                                    <option value="Submitted">Submitted</option>
-                                    <option value="Filed">Filed</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-success" onclick="saveAllReturnData()">
-                                    <i class="fas fa-save"></i> Save All
-                                </button>
-                            </div>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Client Name</th>
-                                        <th>GSTIN</th>
-                                        <th>Period</th>
-                                        <th>Date of Filing</th>
-                                        <th>Status</th>
-                                        <th>ARN</th>
-                                        <th>Remarks</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="returnDetailsTableBody">
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+		<div class="modal fade" id="returnDetailsModal" tabindex="-1" aria-labelledby="returnDetailsModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-xl modal-dialog-scrollable">
+				<div class="modal-content">
+					<div class="modal-header bg-primary text-white">
+						<h5 class="modal-title" id="returnDetailsModalLabel">Return Details</h5>
+						<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+
+					<div class="modal-body">
+						<!-- Filter Section -->
+						<div class="row align-items-end g-3 mb-3">
+							<!-- Search Box -->
+							<div class="col-md-3">
+								<label for="searchInput" class="form-label mb-1">Search Client</label>
+								<input type="text" class="form-control" placeholder="Name or GSTIN" id="searchInput">
+							</div>
+
+							<!-- Status Filter -->
+							<div class="col-md-4">
+								<label for="statusFilter" class="form-label mb-1">Filter by Status</label>
+								<select id="statusFilter" class="form-control" multiple>
+									<option value="__all__">Select/Deselect All</option>
+									<option value="Data Received">Data Received</option>
+									<option value="Saved">Saved</option>
+									<option value="Payment Issued">Payment Issued</option>
+									<option value="Submitted">Submitted</option>
+									<option value="Filed">Filed</option>
+								</select>
+							</div>
+
+							<!-- Button Group: All three buttons in one column -->
+							<div class="col-md-5 text-end">
+								<div class="d-flex gap-2 justify-content-end flex-wrap">
+									<button id="clearStatusFilter" class="btn btn-outline-secondary">
+										<i class="fas fa-broom"></i> Clear Filters
+									</button>
+									<button onclick="exportReturnGridToExcel()" class="btn btn-outline-success">
+										<i class="fas fa-file-excel"></i> Export Excel
+									</button>
+								</div>
+							</div>
+						</div>
+
+						<!-- Return Filing Table -->
+						<div class="table-responsive">
+							<table class="table table-bordered table-hover small">
+								<thead class="table-dark">
+									<tr>
+										<th>Client Name</th>
+										<th>GSTIN</th>
+										<th>Period</th>                                
+										<th>Status</th>
+										<th>Date of Filing</th>
+										<th>ARN</th>
+										<th>Remarks</th>
+										<th>Action</th>
+									</tr>
+								</thead>
+								<tbody id="returnDetailsTableBody">
+									<!-- Filled via JS -->
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
     `;
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 }
@@ -898,15 +842,54 @@ function saveReturnData(clientCode) {
         if (data.success) {
             showAlert('Return data saved successfully!', 'success');
         } else {
-            showAlert('Error saving return data: ' + data.error, 'danger');
+            showAlert(data.error, 'danger');
         }
     })
     .catch(error => {
-        showAlert('Error: ' + error.message, 'danger');
+        showAlert(error.message, 'danger');
     });
 }
 
+// Validate a single row's data within the modal table/form
+function validateReturnRow(rowElem) {
+    const status = rowElem.querySelector(".status-input")?.value?.trim();
+    const arn = rowElem.querySelector(".arn-input")?.value?.trim();
+    const dateOfFiling = rowElem.querySelector(".date-of-filing-input")?.value?.trim();
+    
+    let missing = [];
+    if (status === "Filed") {
+        if (!arn) missing.push("ARN");
+        if (!dateOfFiling) missing.push("Date of Filing");
+    }
+    if (missing.length) {
+        // Add error highlighting to row
+        rowElem.classList.add("row-error");
+        // Remove highlight after 3.5s
+        setTimeout(() => rowElem.classList.remove("row-error"), 3500);
+        
+        // Show combined toast error
+        showAlert(`${missing.join(' and ')} required when status is "Filed".`);
+        return false;
+    }
+    return true;
+}
+
 function saveAllReturnData() {
+	const tableBody = document.getElementById('returnDetailsTableBody');
+    const rows = tableBody.querySelectorAll('tr');
+    
+    let allValid = true;
+    rows.forEach(row => {
+        if (!validateReturnRow(row)) {
+            allValid = false;
+        }
+    });
+
+    if (!allValid) {
+        // Stop submission, toasts already shown
+        return;
+    }
+	
     const promises = returnClientsData.map(client => {
         const returnData = {
             client_code: client.client_code,
@@ -935,7 +918,7 @@ function saveAllReturnData() {
             }
         })
         .catch(error => {
-            showAlert('Error saving return data: ' + error.message, 'danger');
+            showAlert(error.message, 'danger');
         });
 }
 
@@ -976,26 +959,43 @@ function showLoading(show) {
     }
 }
 
-function showAlert(message, type) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-    alertDiv.setAttribute('role', 'alert');
-    alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
-    const mainContainer = document.querySelector('.container-fluid');
-    if (mainContainer) {
-        mainContainer.insertBefore(alertDiv, mainContainer.firstChild);
-    } else {
-        document.body.insertBefore(alertDiv, document.body.firstChild);
-    }
+// function showAlert(message, type) {
+    // const alertDiv = document.createElement('div');
+    // alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    // alertDiv.setAttribute('role', 'alert');
+    // alertDiv.innerHTML = `
+        // ${message}
+        // <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    // `;
+    // const mainContainer = document.querySelector('.container-fluid');
+    // if (mainContainer) {
+        // mainContainer.insertBefore(alertDiv, mainContainer.firstChild);
+    // } else {
+        // document.body.insertBefore(alertDiv, document.body.firstChild);
+    // }
+    // setTimeout(() => {
+        // if (alertDiv.parentNode) {
+            // alertDiv.remove();
+        // }
+    // }, 5000);
+// }
+
+function showAlert(message, type = "danger") {
+    const container = document.getElementById("toast-container");
+    if (!container) return;
+    const toast = document.createElement("div");
+    toast.className = "toast-message";
+    toast.textContent = message;
+    if (type === "success") toast.style.background = "#28a745";
+    if (type === "warning") toast.style.background = "#17a2b8";
+    toast.setAttribute('role', 'alert');
+    container.appendChild(toast);
     setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.remove();
-        }
-    }, 5000);
+        toast.style.opacity = 0;
+        setTimeout(() => toast.remove(), 500);
+    }, 3500);
 }
+
 
 // Utility validators
 function formatDate(dateString) {

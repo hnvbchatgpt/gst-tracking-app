@@ -803,3 +803,28 @@ body {
         min-width: 0 !important;
     }
 }
+
+#toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10800; /* Above modal and its backdrop */
+  min-width: 320px;
+  max-width: 380px;
+  pointer-events: none;
+}
+.toast-message {
+  background: #dc3545;
+  color: #fff;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+  padding: 1rem 1.2rem;
+  font-size: 1.08rem;
+  pointer-events: all;
+  animation: slideIn 0.35s cubic-bezier(.59,.07,.53,1.15);
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-24px);}
+  to   { opacity: 1; transform: none;}
+}
