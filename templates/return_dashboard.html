@@ -1,0 +1,69 @@
+<!-- Return Details Modal -->
+<div class="modal fade" id="returnDetailsModal" tabindex="-1" aria-labelledby="returnDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="returnDetailsModalLabel">Return Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Filter Section -->
+                <div class="row align-items-end g-3 mb-3">
+                    <!-- Search Input -->
+                    <div class="col-md-3">
+                        <label for="searchInput" class="form-label mb-1">Search Client</label>
+                        <input type="text" class="form-control" placeholder="Name or GSTIN" id="searchInput">
+                    </div>
+
+                    <!-- Status Multi-Select -->
+                    <div class="col-md-5">
+                        <label for="statusFilter" class="form-label mb-1">Filter by Status</label>
+                        <select id="statusFilter" class="form-control" multiple>
+                            <option value="Data Received">Data Received</option>
+                            <option value="Saved">Saved</option>
+                            <option value="Payment Issued">Payment Issued</option>
+                            <option value="Submitted">Submitted</option>
+                            <option value="Filed">Filed</option>
+                        </select>
+                    </div>
+
+                    <!-- Clear Filters Button -->
+                    <div class="col-md-2 d-flex">
+                        <button id="clearStatusFilter" class="btn btn-outline-secondary w-100">
+                            Clear Filters
+                        </button>
+                    </div>
+
+                    <!-- Save All Button -->
+                    <div class="col-md-2 text-end">
+                        <button onclick="saveAllReturnData()" class="btn btn-success w-100">
+                            <i class="fas fa-save"></i> Save All
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Return Filing Table -->
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover small">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Client Name</th>
+                                <th>GSTIN</th>
+                                <th>Period</th>
+                                <th>Date of Filing</th>
+                                <th>Status</th>
+                                <th>ARN</th>
+                                <th>Remarks</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="returnDetailsTableBody">
+                            <!-- Filled via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

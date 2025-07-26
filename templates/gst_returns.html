@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}GST Returns - GST Return Tracking System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card p-4">
+            <h4>Select Return Frequency & Period</h4>
+            <form id="returnDashboardForm">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="frequency" class="form-label">Frequency</label>
+                        <select id="frequency" name="frequency" class="form-select" required>
+                            <option value="">-- Select --</option>
+                            <option value="Monthly">Monthly</option>
+                            <option value="Quarterly">Quarterly</option>
+                            <option value="Annually">Annually</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3" id="financialYearDiv" style="display:none">
+                        <label for="financial_year" class="form-label">Financial Year</label>
+                        <select id="financial_year" name="financial_year" class="form-select">
+                            {% for year in financial_years %}
+                                <option value="{{ year }}">{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3" id="monthDiv" style="display:none">
+                        <label for="month" class="form-label">Month</label>                        
+						<select id="month" name="month" class="form-select">
+							<option value="Apr">April</option>
+							<option value="May">May</option>
+							<option value="Jun">June</option>
+							<option value="Jul">July</option>
+							<option value="Aug">August</option>
+							<option value="Sep">September</option>
+							<option value="Oct">October</option>
+							<option value="Nov">November</option>
+							<option value="Dec">December</option>
+							<option value="Jan">January</option>
+							<option value="Feb">February</option>
+							<option value="Mar">March</option>
+						</select>
+                    </div>
+                    <div class="col-md-3" id="quarterDiv" style="display:none">
+                        <label for="quarter" class="form-label">Quarter</label>
+                        <select id="quarter" name="quarter" class="form-select">
+                            {% for q in quarters %}
+                                <option value="{{ q }}">{{ q }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 align-self-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-arrow-right"></i> Go
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="row mt-4" id="dashboardContainer" style="display:none"></div>
+
+<!-- 🔽 Include return_dashboard.html via include -->
+{% include "return_dashboard.html" %}
+{% endblock %}
