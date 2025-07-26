@@ -622,46 +622,86 @@ function displayReturnDetails(returnType, period, clients) {
     new bootstrap.Modal(document.getElementById('returnDetailsModal')).show();
 }
 
-function exportReturnGridToExcel() {
-    // Use filtered grid data -- must match what's displayed, e.g. filterGridByStatus()
-    const statusFilter = $('#statusFilter').val();
-    const filteredData =
-        (!statusFilter || statusFilter.length === 0)
-        ? returnClientsData
-        : returnClientsData.filter(client => statusFilter.includes(client.status));
+async function exportReturnGridToExcel() {
+    // Create a new workbook and add a worksheet
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'GST Returns';
+    workbook.created = new Date();
+    const worksheet = workbook.addWorksheet('GST Returns');
 
-    if (!filteredData.length) {
-        showAlert("No data available for export!");
-        return;
-    }
-
-    // Build a 2D array for Excel (headers + rows)
-    const headers = [
-        "Client Name", "GSTIN", "Period", "Status", "Date of Filing", "ARN", "Remarks"
+    // Define columns with headers and key mapping (adjust keys to your data fields)
+    worksheet.columns = [
+        { header: 'Client Name', key: 'client_name', width: 30 },
+        { header: 'GSTIN', key: 'gstin', width: 20 },
+        { header: 'Period', key: 'period', width: 15 },
+        { header: 'Status', key: 'status', width: 15 },
+		{ header: 'Date of Filing', key: 'date_of_filing', width: 20 },
+        { header: 'ARN', key: 'arn', width: 25 },
+		{ header: 'Remarks', key: 'remarks', width: 30 },
+        // Add other columns as required
     ];
 
-    const rows = filteredData.map(client => [
-        client.client_name,
-        client.gstin,
-        client.period,
-		client.status,
-        client.date_of_filing || "",        
-        client.arn || "",
-        client.remarks || ""
-    ]);
+    // Add header row formatting
+    worksheet.getRow(1).font = { bold: true, size: 12, color: { argb: "FFFFFFFF" } };
+    worksheet.getRow(1).fill = {
+        type: 'pattern',
+        pattern:'solid',
+        fgColor:{argb:'FF4472C4'}, // Blue background
+    };
+    worksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' };
 
-    const ws_data = [headers, ...rows];
+    // Optional: Freeze header row
+    worksheet.views = [{ state: 'frozen', ySplit: 1 }];
 
-    // Create worksheet and workbook
-    const ws = XLSX.utils.aoa_to_sheet(ws_data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Returns");
+    // Example of date formatting style
+    const dateStyle = { numFmt: 'dd-mmm-yyyy' };
 
-    // Trigger download
-	var randomNum = Math.floor(1000 + Math.random() * 9000);
-	var fileName = "ReturnDetails_" + randomNum + ".xlsx";
-    XLSX.writeFile(wb, fileName);
+    // Populate rows from your data array, e.g., returnClientsData
+    returnClientsData.forEach(item => {
+        worksheet.addRow({
+            client_name: item.client_name,
+            gstin: item.gstin,
+            period: item.period,
+            status: item.status,
+            date_of_filing: item.date_of_filing ? new Date(item.date_of_filing) : null,
+            arn: item.arn || '',
+			remarks: item.remarks || ""
+            // add other fields
+        });
+    });
+
+    // Apply date formatting to Date of Filing column cells (except header)
+    worksheet.getColumn('date_of_filing').eachCell({ includeEmpty: false }, (cell, rowNumber) => {
+        if (rowNumber === 1) return; // Skip header row
+        if (cell.value) cell.numFmt = dateStyle.numFmt;
+    });
+
+    // Add borders around all data cells for professional look
+    // worksheet.eachRow((row, rowNumber) => {
+        // row.eachCell(cell => {
+            // cell.border = {
+                // top: { style: 'thin' },
+                // left: { style: 'thin' },
+                // bottom: { style: 'thin' },
+                // right: { style: 'thin' }
+            // };
+        // });
+    // });
+
+    // Auto-filter for headers
+    // worksheet.autoFilter = {
+        // from: 'A1',
+        // to: worksheet.getRow(1).lastCell.address
+    // };
+
+    // Generate Excel file buffer
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    // Use FileSaver.js to let user download the file
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    saveAs(blob, `GST_Returns_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
+
 
 
 // // Status Filter Function
