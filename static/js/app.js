@@ -142,121 +142,7 @@ document.addEventListener('DOMContentLoaded', setGstReturnDropdownDefaults);
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
-
 /*
-document.addEventListener('DOMContentLoaded', () => {
-	// Enhance dropdown with Select2
-  $('#statusFilter').select2({
-    placeholder: 'Select Statuses',
-    width: '100%',
-    closeOnSelect: false,
-	dropdownParent: $('#returnDetailsModal')
-  });
-
-  // Status filter change
-  $('#statusFilter').on('change', filterGridByStatus);
-
-  // Clear filters
-  $('#clearStatusFilter').on('click', function () {
-    $('#statusFilter').val(null).trigger('change');
-    filterGridByStatus();
-  });
-  
-  const returnModal = document.getElementById('returnDetailsModal');
-
-    if (returnModal) {
-        returnModal.addEventListener('hidden.bs.modal', function () {
-            // Force cleanup of unwanted state
-            $('.modal-backdrop').remove();
-            $('body').removeClass('modal-open');
-            $('body').css('padding-right', '');
-
-            // Optionally reset dropdown etc.
-            if ($('#statusFilter').hasClass("select2-hidden-accessible")) {
-                $('#statusFilter').select2('destroy');
-            }
-            $('#statusFilter').val(null);
-        });
-    }
-});
-*/
-
-
-/*
-document.addEventListener('DOMContentLoaded', function () {
-  const $modal = $('#returnDetailsModal');
-  const $statusSelect = $('#statusFilter');
-  const $clearBtn = $('#clearStatusFilter');
-
-  let select2Initialized = false;
-
-  // 🧹 Cleanup on modal close
-  $modal.on('hidden.bs.modal', function () {
-    if ($statusSelect.hasClass('select2-hidden-accessible')) {
-      $statusSelect.select2('destroy');
-    }
-    select2Initialized = false;
-
-    // Remove lingering backdrops
-    $('.modal-backdrop').remove();
-    $('body').removeClass('modal-open').css('padding-right', '');
-  });
-
-  // ✅ Safe re-initialization ONCE per modal open
-  $modal.on('shown.bs.modal', function () {
-    if (!select2Initialized) {
-      
-	  $statusSelect.select2({
-		  placeholder: 'Select statuses',
-		  width: '100%',
-		  closeOnSelect: false,
-		  dropdownParent: $modal,
-		  templateResult: function (option) {
-			if (!option.id) return option.text;
-
-			const selectedValues = $statusSelect.val() || [];
-			const isSelected = selectedValues.includes(option.id);
-
-			return $(`
-			  <div class="d-flex align-items-center">
-				<span class="me-2">${isSelected ? '✅' : '⬜'}</span>
-				<span>${option.text}</span>
-			  </div>
-			`);
-		  },
-		  templateSelection: function (option) {
-			return option.text;
-		  },
-		  escapeMarkup: function (m) {
-			return m;
-		  }
-		});
-
-
-      // Pre-select default statuses (excluding "Filed")
-      const defaultStatuses = [
-        'Data Received',
-        'Saved',
-        'Payment Issued',
-        'Submitted'
-      ];
-      $statusSelect.val(defaultStatuses).trigger('change');
-
-      select2Initialized = true;
-    }
-  });
-
-  // 🧠 Filtering Logic
-  $statusSelect.on('change', filterGridByStatus);
-
-  // Clear Button
-  $clearBtn.on('click', function () {
-    $statusSelect.val(null).trigger('change');
-    filterGridByStatus();
-  });
-});
-*/
-
 document.addEventListener('DOMContentLoaded', function () {
   const $modal = $('#returnDetailsModal');
   const $statusSelect = $('#statusFilter');
@@ -330,6 +216,111 @@ document.addEventListener('DOMContentLoaded', function () {
     filterGridByStatus();
   });
 });
+*/
+
+document.addEventListener('DOMContentLoaded', function () {
+  const $modal = $('#returnDetailsModal');
+  const $statusSelect = $('#statusFilter');
+  const $clearBtn = $('#clearStatusFilter');
+  let select2Initialized = false;
+
+  // List of all real statuses (do not include __all__)
+  const allStatuses = [
+    "Data Received",
+    "Saved",
+    "Payment Issued",
+    "Submitted",
+    "Filed"
+  ];
+
+  function initStatusSelect() {
+    $statusSelect.select2({
+      placeholder: 'Select statuses',
+      width: '100%',
+      closeOnSelect: false,
+      dropdownParent: $modal,
+      templateResult: function (option) {
+        if (!option.id) return option.text;
+
+        // Select/Deselect All entry
+        if (option.id === "__all__") {
+          const selected = $statusSelect.val() || [];
+          const allSelected = allStatuses.every(val => selected.includes(val));
+          return $(`
+            <div class="fw-bold">
+              ${allSelected ? "Deselect All" : "Select All"}
+            </div>
+          `);
+        }
+
+        const selectedValues = $statusSelect.val() || [];
+        const isSelected = selectedValues.includes(option.id);
+        return $(`
+          <div class="d-flex align-items-center">
+            <span>${option.text}</span>
+          </div>
+        `);
+      },
+      templateSelection: function (option) {
+        // Hide "__all__" in selected tags
+        if (option.id === "__all__") return '';
+        return option.text;
+      },
+      escapeMarkup: m => m
+    });
+  }
+
+  // Clean up on modal close
+  $modal.on('hidden.bs.modal', function () {
+    if ($statusSelect.hasClass('select2-hidden-accessible')) {
+      $statusSelect.select2('destroy');
+    }
+    select2Initialized = false;
+    $('.modal-backdrop').remove();
+    $('body').removeClass('modal-open').css('padding-right', '').css('overflow', 'auto');
+  });
+
+  // Modal open: (re-)initialize select2, pre-select all statuses except Filed
+  $modal.on('shown.bs.modal', function () {
+    if (!select2Initialized) {
+      initStatusSelect();
+
+      // By default, pre-select all except 'Filed'
+      const defaultSel = ["Data Received", "Saved", "Payment Issued", "Submitted"];
+      $statusSelect.val(defaultSel).trigger('change');
+      select2Initialized = true;
+    }
+  });
+
+  // Handle Select/Deselect All logic
+  $statusSelect.on('select2:select', function (e) {
+    if (e.params.data.id === "__all__") {
+      const selected = $statusSelect.val() || [];
+      const allSelected = allStatuses.every(val => selected.includes(val));
+      if (allSelected) {
+        // Deselect all
+        $statusSelect.val([]).trigger('change');
+      } else {
+        // Select all
+        $statusSelect.val(allStatuses).trigger('change');
+      }
+      // Remove "__all__" from selection to avoid it being shown in tags
+      setTimeout(() => {
+        $statusSelect.find('option[value="__all__"]').prop('selected', false);
+      }, 10);
+    }
+  });
+
+  // Filter when changed
+  $statusSelect.on('change', filterGridByStatus);
+
+  // Clear button as before
+  $clearBtn.on('click', function () {
+    $statusSelect.val(null).trigger('change');
+    filterGridByStatus();
+  });
+});
+
 
 function filterGridByStatus() {
   const selectedStatuses = $('#statusFilter').val();  // Array or null
@@ -704,6 +695,47 @@ function displayReturnDetails(returnType, period, clients) {
 
     new bootstrap.Modal(document.getElementById('returnDetailsModal')).show();
 }
+
+function exportReturnGridToExcel() {
+    // Use filtered grid data -- must match what's displayed, e.g. filterGridByStatus()
+    const statusFilter = $('#statusFilter').val();
+    const filteredData =
+        (!statusFilter || statusFilter.length === 0)
+        ? returnClientsData
+        : returnClientsData.filter(client => statusFilter.includes(client.status));
+
+    if (!filteredData.length) {
+        alert("No data available for export!");
+        return;
+    }
+
+    // Build a 2D array for Excel (headers + rows)
+    const headers = [
+        "Client Name", "GSTIN", "Period", "Date of Filing",
+        "Status", "ARN", "Remarks"
+    ];
+
+    const rows = filteredData.map(client => [
+        client.client_name,
+        client.gstin,
+        client.period,
+        client.date_of_filing || "",
+        client.status,
+        client.arn || "",
+        client.remarks || ""
+    ]);
+
+    const ws_data = [headers, ...rows];
+
+    // Create worksheet and workbook
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Returns");
+
+    // Trigger download
+    XLSX.writeFile(wb, "ReturnDetails.xlsx");
+}
+
 
 // Status Filter Function
 const statusFilterId = 'statusFilter';

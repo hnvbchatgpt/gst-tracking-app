@@ -730,28 +730,76 @@ body {
 }
 
 .select2-container--default .select2-results__option {
-  padding: 6px 12px;
+    padding: 7px 14px;
+    font-size: 1.1rem;
 }
 .select2-container--default .select2-selection--multiple {
-  min-height: 38px;
-  border-radius: 6px;
-  padding: 4px;
-  border: 1px solid #ced4da;
+    min-height: 38px;
+    border-radius: 6px;
+    padding: 4px;
+    border: 1px solid #ced4da;
 }
 .select2-selection__choice {
-  background-color: #175cd3;
-  color: #fff;
-  padding: 2px 10px;
-  border-radius: 16px;
-  font-size: 0.88rem;
-  margin-top: 6px;
+    background-color: #175cd3;
+    color: #fff;
+    border-radius: 16px;
+    margin-top: 6px;
+    font-size: 0.98rem;
+    padding: 2px 12px;
 }
 .select2-selection__choice__remove {
-  color: #fff;
-  margin-right: 4px;
+    color: #fff;
+    margin-right: 4px;
 }
 
 .select2-results__option span {
   font-size: 0.95rem;
 }
 
+.btn-outline-success {
+    color: #198754;
+    border-color: #198754;
+}
+.btn-outline-success:hover {
+    background-color: #198754;
+    color: #fff;
+}
+
+/* Button Group Styling inside Modal */
+#returnDetailsModal .d-flex.gap-2 > .btn {
+    min-width: 130px;
+    font-size: 1rem;
+    padding: 8px 18px;
+}
+
+#returnDetailsModal .btn-outline-success {
+    color: #198754;
+    border-color: #198754;
+}
+#returnDetailsModal .btn-outline-success:hover {
+    background-color: #198754;
+    color: #fff;
+}
+
+#returnDetailsModal .btn-success {
+    background-color: #175cd3;
+    border-color: #175cd3;
+    color: #fff;
+}
+#returnDetailsModal .btn-success:hover {
+    background-color: #1248a9;
+    border-color: #1248a9;
+}
+
+/* Optionally make buttons stack vertically on very small screens: */
+@media (max-width: 600px) {
+    #returnDetailsModal .d-flex.gap-2 {
+        flex-direction: column !important;
+        gap: 10px !important;
+        align-items: stretch !important;
+    }
+    #returnDetailsModal .btn {
+        width: 100%;
+        min-width: 0 !important;
+    }
+}

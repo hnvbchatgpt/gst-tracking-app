@@ -10,38 +10,40 @@
             <div class="modal-body">
                 <!-- Filter Section -->
                 <div class="row align-items-end g-3 mb-3">
-                    <!-- Search Input -->
-                    <div class="col-md-3">
-                        <label for="searchInput" class="form-label mb-1">Search Client</label>
-                        <input type="text" class="form-control" placeholder="Name or GSTIN" id="searchInput">
-                    </div>
+					<!-- Search Box -->
+					<div class="col-md-3">
+						<label for="searchInput" class="form-label mb-1">Search Client</label>
+						<input type="text" class="form-control" placeholder="Name or GSTIN" id="searchInput">
+					</div>
 
-                    <!-- Status Multi-Select -->
-                    <div class="col-md-5">
-                        <label for="statusFilter" class="form-label mb-1">Filter by Status</label>
-                        <select id="statusFilter" class="form-control" multiple>
-                            <option value="Data Received">Data Received</option>
-                            <option value="Saved">Saved</option>
-                            <option value="Payment Issued">Payment Issued</option>
-                            <option value="Submitted">Submitted</option>
-                            <option value="Filed">Filed</option>
-                        </select>
-                    </div>
+					<!-- Status Filter -->
+					<div class="col-md-4">
+						<label for="statusFilter" class="form-label mb-1">Filter by Status</label>
+						<select id="statusFilter" class="form-control" multiple>
+							<option value="__all__">Select/Deselect All</option>
+							<option value="Data Received">Data Received</option>
+							<option value="Saved">Saved</option>
+							<option value="Payment Issued">Payment Issued</option>
+							<option value="Submitted">Submitted</option>
+							<option value="Filed">Filed</option>
+						</select>
+					</div>
 
-                    <!-- Clear Filters Button -->
-                    <div class="col-md-2 d-flex">
-                        <button id="clearStatusFilter" class="btn btn-outline-secondary w-100">
-                            Clear Filters
-                        </button>
-                    </div>
-
-                    <!-- Save All Button -->
-                    <div class="col-md-2 text-end">
-                        <button onclick="saveAllReturnData()" class="btn btn-success w-100">
-                            <i class="fas fa-save"></i> Save All
-                        </button>
-                    </div>
-                </div>
+					<!-- Button Group: All three buttons in one column -->
+					<div class="col-md-5 text-end">
+						<div class="d-flex gap-2 justify-content-end flex-wrap">
+							<button id="clearStatusFilter" class="btn btn-outline-secondary">
+								<i class="fas fa-broom"></i> Clear Filters
+							</button>
+							<button onclick="exportReturnGridToExcel()" class="btn btn-outline-success">
+								<i class="fas fa-file-excel"></i> Export Excel
+							</button>
+							<button onclick="saveAllReturnData()" class="btn btn-success">
+								<i class="fas fa-save"></i> Save All
+							</button>
+						</div>
+					</div>
+				</div>
 
                 <!-- Return Filing Table -->
                 <div class="table-responsive">
